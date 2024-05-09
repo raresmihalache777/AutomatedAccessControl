@@ -27,3 +27,5 @@ db = LocalProxy(get_db)
 
 def db_query_get_all_users():
     return db.users
+
+db_query_get_all_users()
