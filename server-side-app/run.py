@@ -1,5 +1,11 @@
+import configparser
+import os
 from app import app
-from config import config
+
+config = configparser.ConfigParser()
+config.read(os.path.abspath(os.path.join(".ini")))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=config.PORT, debug=config.DEBUG)
+    app.config['DEBUG'] = True
+    app.config['MONGO_URI'] = config['PROD']['DB_URI']
+    app.run(host='0.0.0.0', port=config['PROD']['PORT'])
