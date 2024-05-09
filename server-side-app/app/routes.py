@@ -1,17 +1,8 @@
-from flask import Flask, jsonify, request
-from config import config
-from run import app
-import requests
+from flask import jsonify, redirect, render_template, url_for, flash, request
+from app import app
+import os
 
-@app.route('/unlock', methods=['GET'])
-def handle_request():
-    print("Cineva vrea sa deschida!")
-    
-    response = requests.get(config.CLIENT_URL + '/api/unlockResponse')
-    print(response)
 
-    return "Cererea a fost procesata cu succes. Trimit ${response}"
-
-@app.route('/', methods=['GET'])
-def handle_index():
-    return "index"
+@app.route('/')
+def index():
+    return "ceva"
