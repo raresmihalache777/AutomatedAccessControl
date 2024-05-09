@@ -11,3 +11,7 @@ def handle_request():
     print(response)
 
     return "Cererea a fost procesata cu succes. Trimit ${response}"
+
+@app.route('/', methods=['GET'])
+def handle_index():
+    return "index"
