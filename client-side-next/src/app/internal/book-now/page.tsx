@@ -170,30 +170,30 @@ export default function BookPage() {
             <div>
                 <h2 className="mb-2">Booking duration:</h2>
 				<div className="flex gap-4">
-				<div>
-    <button 
-        className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 60 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button60 ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onClick={() => handleDurationChange(60)}
-        disabled={disabledDurations.button60}
-    >
-        60 min
-    </button>
-    <button 
-        className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 90 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button90 ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onClick={() => handleDurationChange(90)}
-        disabled={disabledDurations.button90}
-    >
-        90 min
-    </button>
-    <button 
-        className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 120 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button120 ? 'opacity-50 cursor-not-allowed' : ''}`}
-        onClick={() => handleDurationChange(120)}
-        disabled={disabledDurations.button120}
-    >
-        120 min
-    </button>
-</div>
-				</div>
+                    <div>
+                        <button 
+                            className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 60 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button60 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleDurationChange(60)}
+                            disabled={disabledDurations.button60}
+                        >
+                            60 min
+                        </button>
+                        <button 
+                            className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 90 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button90 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleDurationChange(90)}
+                            disabled={disabledDurations.button90}
+                        >
+                            90 min
+                        </button>
+                        <button 
+                            className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 120 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button120 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleDurationChange(120)}
+                            disabled={disabledDurations.button120}
+                        >
+                            120 min
+                        </button>
+                    </div>
+			    </div>
             </div>
 			<button
 				onClick={onBook}

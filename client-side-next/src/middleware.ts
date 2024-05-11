@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 import * as jose from 'jose'
+import { connectToMongoDB } from './dbConfig/dbConfig';
  
+connectToMongoDB();
+
+
 export async function middleware(request: NextRequest) {
     const urlPath = request.nextUrl.pathname;
     const profileRoute = urlPath === '/profile';

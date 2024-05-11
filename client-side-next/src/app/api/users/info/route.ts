@@ -1,9 +1,6 @@
-import { connectToMongoDB } from "@/dbConfig/dbConfig";
 import { NextRequest, NextResponse } from "next/server";
 import * as jose from 'jose'
 
-
-connectToMongoDB();
 
 export async function GET(request: NextRequest){
     try{
