@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken'
 
-connectToMongoDB();
+
 
 export async function POST(request: NextRequest){
     try{
