@@ -5,9 +5,11 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { FaAngleLeft } from 'react-icons/fa6';
+import { useAppContext } from '../context/appContext';
 
 export default function LoginPage() {
 	const router = useRouter();
+	const appContext = useAppContext();
 
 	const [user, setUser] = React.useState({
 		email: '',
@@ -20,14 +22,23 @@ export default function LoginPage() {
 
 	const onLogin = async () => {
 		try {
-			setLoading(true);
+			appContext.toggleLoadingState(true)
 			const response = await axios.post('api/users/login', user);
-			console.log('Login successful', response.data);
-			router.push('internal/profile');
+			console.log('Login successful', response.data);	
+			
+
+			if(response.data.type === 'u'){
+				router.push('internal/profile');
+			}else if(response.data.type === 'a'){
+				router.push('/admin/dashboard');
+			}else{
+				router.push('/login');
+			}
+			appContext.toggleLoadingState(false)
 		} catch (error: any) {
 			console.log('Login failed:', error.message);
 		} finally {
-			setLoading(false);
+			appContext.toggleLoadingState(false);
 		}
 	};
 
@@ -36,14 +47,13 @@ export default function LoginPage() {
 			user.email.length > 0 &&
             user.email.includes('@') &&
 			user.password.length > 0
-		) {
+		){
 			setButtonDisabled(false);
 		} else {
 			setButtonDisabled(true);
 		}
 	}, [user]);
 
-	console.log(user);
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen py-2">

@@ -4,19 +4,20 @@ import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken'
 
-
+connectToMongoDB();
 
 export async function POST(request: NextRequest){
     try{
         //request data extraction
         const reqBody = await request.json();
         const {email, password} = reqBody;
-
         console.log(reqBody);
         //check email existence
         const user = await User.findOne({email});
 
-        console.log(user);
+        //console.log(user);
+
+        //USER DOESN'T EXIST
         if(!user){
             return NextResponse.json({error: 'User was not found'}, {status:400});
         }
@@ -34,11 +35,12 @@ export async function POST(request: NextRequest){
         const tokenData={
             id: user._id,
             username: user.username,
-            email: user.email
+            email: user.email,
+            type: user.type
         }
        
         //create token data
-        const token = jwt.sign(tokenData, 'mfrwejpoigmj', {
+        const token = jwt.sign(tokenData, process.env.TOKEN_SECRET, {
             expiresIn: '2d',
         });
         
@@ -47,6 +49,7 @@ export async function POST(request: NextRequest){
         const response = NextResponse.json({
             messaje: 'Login successful',
             success: true,
+            type: user.type
         })
         
         

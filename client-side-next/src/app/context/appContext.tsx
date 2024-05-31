@@ -1,22 +1,28 @@
-/*
-Creates the user context for the internal pages of the app. Sends a GET request to /api/users/info
-that returns the current user's public data based on JWT decoding. This data is passed to internal pages
-that need it in order to display the dynamic content.
-*/
-
 'use client';
 
-import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
 
-const [appState, setAppState] = useState({loading:false});
-
-const AppContext = createContext(appState);
+const AppContext = createContext({loading:false, toggleLoadingState: (x:boolean) =>{}, alert:{message:'', alert:false ,setAlertState: (m: string, x:boolean) =>{}}});
 
 export function AppWrapper({children} : {
     children: React.ReactNode;
 }) {
+    const [loadingState, setLoadingState] = useState(Boolean);
+    const [alertMessage, setAlertMessage] = useState('')
+    const [showAlert, setShowAlert] = useState(Boolean)
 
+    const toggleLoadingState = (x:boolean) => {setLoadingState(x);}
+    const toggleAlert = (m: string, x:boolean) =>{setAlertMessage(m), setShowAlert(x);}
+
+    const appState = {
+        loading:loadingState,
+        toggleLoadingState,
+        alert:{
+            message:alertMessage,
+            alert:showAlert,
+            setAlertState: toggleAlert
+        }
+    }
     return (
         <AppContext.Provider value={appState}>
             {children}
@@ -24,6 +30,6 @@ export function AppWrapper({children} : {
     )
 }
 
-export function useUserContext() {
+export function useAppContext() {
     return useContext(AppContext);
 }

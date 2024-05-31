@@ -2,15 +2,16 @@
 
 import { useUserContext } from "@/app/context/userContext";
 import { useAppContext } from "@/app/context/appContext";
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import getAvailableSlots from '@/app/utils/timeslotsUtils'
+import { ReactSearchAutocomplete } from 'react-search-autocomplete'
 
 
-export default function BookPage() {
+
+export default function BookPageAdmin() {
     const [booking, setBooking] = useState({
         userId : '',
         date : new Date(),
@@ -20,6 +21,7 @@ export default function BookPage() {
         code: ''
     })
 
+
     const [loading, setLoading] = useState(false);
     const [startDate, setStartDate] = useState(new Date());
 	const [bookingDuration, setBookingDuration] = useState(60);
@@ -27,12 +29,23 @@ export default function BookPage() {
     const [existingBookings, setExistingBookings] = useState([[0,0],[0,0]]);
     const [availableSlots, setAvailableSlots] = useState({})
     const [disabledDurations, setDisabledDurations] = useState({button60:true, button90:true, button120:true});
+    const [users, setUsers] = useState([]);
+    const [selectedUser, setSelectedUser] = useState();
 	const userState = useUserContext();
     const appState = useAppContext();
     const dayStart = 0;
     const dayEnd = 1440;
 
+    const getAllUsers = async () => {
+        try{
+			const response = await axios.get(`/api/users/all-users`)
+            setUsers(response.data)
+            console.log(response.data)
 
+		}catch(err:any){
+			console.log('Error while fetching bookings: ' + err.message);
+		}
+    }
 
     const handleDateChange = (date: any) => {
 
@@ -85,14 +98,32 @@ export default function BookPage() {
         
     }
     
+    const handleOnSearch = (string, results) => {
+        console.log(string, results)
+    }
+
+    const handleOnHover = (result) => {
+        console.log(result);
+    };
+    
+    const handleOnSelect = (item) => {
+        setSelectedUser(item)
+        console.log(item);
+    };
+    
+    const handleOnFocus = () => {
+        console.log("Focused");
+    };
+    
+    const handleOnClear = () => {
+        console.log("Cleared");
+    };
+
 	const onBook = async () => {
 		try{
             setLoading(true);
-            //console.log(booking)
 			const response = await axios.post('/api/bookings/create', booking);
-            appState.alert.setAlertState('Rezervarea a fost facuta cu succes:'+ response.data, true)
-            console.log(response.data)
-			//console.log('booking saved!', response.data);
+            appState.alert.setAlertState('Booking created successfully', true)
         }catch(error:any){
             appState.alert.setAlertState('Error while saving your booking', true)
             console.log('Error while saving your booking: ' + error.message);
@@ -120,6 +151,10 @@ export default function BookPage() {
             return false
         }
       };
+
+    useEffect(() => {
+        getAllUsers()
+    }, [])
 
     useEffect(() => {
         //console.log(booking)
@@ -157,11 +192,11 @@ export default function BookPage() {
     return (
         <div className="mx-5 flex flex-col justify-center items-center">
             <h1 className="text-black-600 text-5xl text-center py-10">
-                Book your tennis court!
+                Add booking
             </h1>
 
             <div className="mb-6">
-                <h2 className="mb-2">Pick your date:</h2>
+                <h2 className="mb-2">Date:</h2>
                 <DatePicker 
                     selected={startDate} 
                     showTimeSelect 
@@ -173,8 +208,22 @@ export default function BookPage() {
                 />
             </div>
 
+            <div className="mb-6">
+                <h2 className="mb-2">Player:</h2>
+                <input className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600"/>
+                {/*<ReactSearchAutocomplete
+                    items={users}
+                    onSearch={handleOnSearch}
+                    onHover={handleOnHover}
+                    onSelect={handleOnSelect}
+                    onFocus={handleOnFocus}
+                    onClear={handleOnClear}
+                    fuseOptions={{ keys: ["username"] }}
+                />*/}
+            </div>
+
             <div>
-                <h2 className="mb-2">Booking duration:</h2>
+                <h2 className="mb-6">Booking duration:</h2>
 				<div className="flex gap-4">
                     <div>
                         <button 
@@ -204,7 +253,7 @@ export default function BookPage() {
 			<button
 				onClick={onBook}
 				disabled = {bookDisabled}
-                className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline`}>
+				className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600 uppercase px-40 py-3 mt-10 font-bold">
 				Book!
 			</button>
         </div>

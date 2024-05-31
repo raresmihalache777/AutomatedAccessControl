@@ -12,7 +12,9 @@ export async function GET(request : NextRequest){
             const response = await Booking.find();
             return NextResponse.json({message: response}, {status: 200})
         }else if(dateQuery !== null){
+            console.log(dateQuery)
             const response = await Booking.find({date : dateQuery});
+            console.log(response)
             return NextResponse.json({message: response}, {status: 200})
         }else if(userIdQuery !== null){
             const response = await Booking.find({userId : userIdQuery});

@@ -43,7 +43,7 @@ export default function InternalLayout({
 
     if(appState.alert.alert){
       return(
-        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-75 z-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <p className="mb-4 text-lg font-semibold">{appState.alert.message}</p>
             <button
