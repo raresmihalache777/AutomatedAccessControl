@@ -1,4 +1,4 @@
-export default function getAvailableSlotsWithDurations(bookings, dayStart, dayEnd) {
+export default function getAvailableSlotsWithDurations(bookings, dayStart, dayEnd){
     /*
         The cuntion returs the availableDurations Object that contains all the timeslots and their available durations.
         INPUTS:

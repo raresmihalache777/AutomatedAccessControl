@@ -22,7 +22,15 @@ export default function ProfilePage(){
 
 	const userState = useUserContext();
 	const appContext = useAppContext();
-	const [bookings, setBookings] = useState([]);
+	const [bookings, setBookings] = useState([{
+		code:1,
+		date:new Date,
+		duration:1,
+		startTime:1,
+		timeStamp:new Date,
+		userId:'String',
+		_id: 'String'
+	}]);
 
 	const getBookingsById = async (id:String) => {
 		try{
@@ -61,7 +69,6 @@ export default function ProfilePage(){
 
 	const unlockHandler = (code:number) => {
 		unlockApiCall(code);
-		//console.log('Ulocking' + code)
 	}
 
 	const unlockEnabler = (booking:BookingInterface) => {

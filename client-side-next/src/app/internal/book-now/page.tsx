@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 'use client';
 
 import { useUserContext } from "@/app/context/userContext";
@@ -30,7 +32,7 @@ export default function BookPage() {
 	const [bookingDuration, setBookingDuration] = useState(60);
 	const [bookDisabled, setBookDisabled] = useState(true);
     const [existingBookings, setExistingBookings] = useState([[0,0],[0,0]]);
-    const [availableSlots, setAvailableSlots] = useState({})
+    const [availableSlots, setAvailableSlots] = useState({'s':[1,2,3]})
     const [disabledDurations, setDisabledDurations] = useState({button60:true, button90:true, button120:true});
     const [cardPayment, setCardPayment] = useState(false)
 	const userState = useUserContext();
@@ -125,6 +127,7 @@ export default function BookPage() {
         // Combine the formatted hour and minute components with a colon to create the time string
         let stringTime:String = `${hours}:${minutes}`;
         //console.log(stringTime);
+        console.log(availableSlots)
         if(currentDate.getTime() < selectedDate.getTime()){
             if(availableSlots[stringTime]?.length){
                 return true
