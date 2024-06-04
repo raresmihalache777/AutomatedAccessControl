@@ -8,7 +8,12 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import getAvailableSlots from '@/app/utils/timeslotsUtils'
+import { loadStripe } from '@stripe/stripe-js';
 
+
+const stripePromise = loadStripe(
+    String(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  );
 
 export default function BookPage() {
     const [booking, setBooking] = useState({
@@ -27,12 +32,20 @@ export default function BookPage() {
     const [existingBookings, setExistingBookings] = useState([[0,0],[0,0]]);
     const [availableSlots, setAvailableSlots] = useState({})
     const [disabledDurations, setDisabledDurations] = useState({button60:true, button90:true, button120:true});
+    const [cardPayment, setCardPayment] = useState(false)
 	const userState = useUserContext();
     const appState = useAppContext();
     const dayStart = 0;
     const dayEnd = 1440;
+    
 
-
+    const handlePaymentChange = (type:String) => {
+        if(type === 'cash'){
+            setCardPayment(false);
+        }else{
+            setCardPayment(true);
+        }
+    }
 
     const handleDateChange = (date: any) => {
 
@@ -88,11 +101,13 @@ export default function BookPage() {
 	const onBook = async () => {
 		try{
             setLoading(true);
-            //console.log(booking)
-			const response = await axios.post('/api/bookings/create', booking);
-            appState.alert.setAlertState('Rezervarea a fost facuta cu succes:'+ response.data, true)
-            console.log(response.data)
-			//console.log('booking saved!', response.data);
+            
+            if(cardPayment === false){
+                const response = await axios.post('/api/bookings/create', booking);
+                appState.alert.setAlertState('Rezervarea a fost facuta cu succes:'+ response.data, true)
+            }else{
+                const response = await axios.post('/api/stripe', booking);
+            }
         }catch(error:any){
             appState.alert.setAlertState('Error while saving your booking', true)
             console.log('Error while saving your booking: ' + error.message);
@@ -154,59 +169,99 @@ export default function BookPage() {
         }
     }, [availableSlots])
 
+    useEffect(() => {
+        // Check to see if this is a redirect back from Checkout
+        const query = new URLSearchParams(window.location.search);
+        if (query.get('success')) {
+          console.log('Order placed! You will receive an email confirmation.');
+        }
+    
+        if (query.get('canceled')) {
+          console.log('Order canceled -- continue to shop around and checkout when you’re ready.');
+        }
+      }, []);
     return (
-        <div className="mx-5 flex flex-col justify-center items-center">
-            <h1 className="text-black-600 text-5xl text-center py-10">
-                Book your tennis court!
-            </h1>
+        <div className="flex flex-col w-screen h-screen justify-center items-center bg-[url('/court_bg_2.jpg')] bg-cover">
+            <div
+                className="flex flex-col justify-center items-center bg-white/90 rounded-2xl p-10">
+                <h1 className="text-black-600 text-5xl text-center py-10">
+                    Book your tennis court!
+                </h1>
+                <div className="flex flex-col justify-center items-center mb-6">
+                    <h2 className="text-black-700 text-3xl py-2">
+						Choose the date:
+					</h2>
+                    <DatePicker 
+                        selected={startDate} 
+                        showTimeSelect 
+                        onChange={handleDateChange} 
+                        icon="fa fa-calendar" 
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        filterTime={filterTime}
+                        className=" mx-5 bg-white text-black rounded-lg px-10 py-2 focus:outline-none focus:border-gray-600"
+                    />
+                </div>
 
-            <div className="mb-6">
-                <h2 className="mb-2">Pick your date:</h2>
-                <DatePicker 
-                    selected={startDate} 
-                    showTimeSelect 
-                    onChange={handleDateChange} 
-                    icon="fa fa-calendar" 
-                    dateFormat="MMMM d, yyyy h:mm aa"
-                    filterTime={filterTime}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600"
-                />
-            </div>
+                <div className="flex flex-col justify-center items-center mb-10">
+                    <h2 className="text-black-700 text-3xl py-2">
+						Booking duration:
+					</h2>
+                    <div className="flex gap-4">
+                        <div>
+                            <button 
+                                className={`text-white rounded-full px-5 py-1  mx-5 hover:bg-blue-700 border cursor-pointer ${bookingDuration === 60 ? 'bg-blue-700' : 'bg-gray-400'} ${disabledDurations.button60 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={() => handleDurationChange(60)}
+                                disabled={disabledDurations.button60}
+                            >
+                                60 min
+                            </button>
+                            <button 
+                                className={`text-white rounded-full px-5 py-1 mx-5 hover:bg-blue-700 border cursor-pointer ${bookingDuration === 90 ? 'bg-blue-700' : 'bg-gray-400'} ${disabledDurations.button90 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={() => handleDurationChange(90)}
+                                disabled={disabledDurations.button90}
+                            >
+                                90 min
+                            </button>
+                            <button 
+                                className={`text-white rounded-full px-5 py-1 mx-5 hover:bg-blue-700 border cursor-pointer ${bookingDuration === 120 ? 'bg-blue-700' : 'bg-gray-400'} ${disabledDurations.button120 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={() => handleDurationChange(120)}
+                                disabled={disabledDurations.button120}
+                            >
+                                120 min
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-            <div>
-                <h2 className="mb-2">Booking duration:</h2>
-				<div className="flex gap-4">
-                    <div>
+                <div className="flex flex-col justify-center items-center mb-10">
+                    <h2 className="text-black-700 text-3xl py-2">
+						Payment method:
+					</h2>
+                    <div className="flex gap-4">
                         <button 
-                            className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 60 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button60 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            onClick={() => handleDurationChange(60)}
-                            disabled={disabledDurations.button60}
-                        >
-                            60 min
+                            className={`text-white rounded-full px-5 py-1 mx-5 hover:bg-blue-700 border cursor-pointer ${cardPayment === false ? 'bg-blue-700' : ' bg-gray-400 opacity-50 cursor-not-allowed'}`}
+                            onClick={() => handlePaymentChange('cash')}
+                            disabled={cardPayment === false}
+                            >
+                            Cash
                         </button>
                         <button 
-                            className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 90 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button90 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            onClick={() => handleDurationChange(90)}
-                            disabled={disabledDurations.button90}
-                        >
-                            90 min
-                        </button>
-                        <button 
-                            className={`bg-gray-200 text-center py-2 px-4 rounded-lg border cursor-pointer ${bookingDuration === 120 ? 'border-black bg-gray-400' : ''} ${disabledDurations.button120 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            onClick={() => handleDurationChange(120)}
-                            disabled={disabledDurations.button120}
-                        >
-                            120 min
+                            className={`text-white  rounded-full px-5 py-1 mx-5 hover:bg-blue-700 border cursor-pointer ${cardPayment === true ? 'bg-blue-700' : 'bg-gray-400 opacity-50 cursor-not-allowed'}`}
+                            onClick={() => handlePaymentChange('card')}
+                            disabled={cardPayment === true}
+                            >
+                            Card
                         </button>
                     </div>
-			    </div>
+                </div>
+
+                <button
+                    onClick={onBook}
+                    disabled = {bookDisabled}
+                    className={`text-white bg-blue-600 rounded-full px-10 py-1 hover:bg-blue-700 ${bookDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    Book!
+                </button>
             </div>
-			<button
-				onClick={onBook}
-				disabled = {bookDisabled}
-                className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline`}>
-				Book!
-			</button>
         </div>
     );
 }

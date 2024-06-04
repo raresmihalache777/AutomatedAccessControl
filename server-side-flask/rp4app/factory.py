@@ -3,9 +3,8 @@ import os
 from flask import Flask, render_template
 from flask.json import JSONEncoder
 from flask_cors import CORS
-##from flask_bcrypt import Bcrypt
-##from flask_jwt_extended import JWTManager
-from rp4app.api.relay import relay_api
+from flask_jwt_extended import JWTManager
+from rp4app.api.relay import relay_api, auth_api
 
 from bson import json_util, ObjectId
 from datetime import datetime, timedelta
@@ -32,10 +31,14 @@ def create_app():
     CORS(app)
     app.json_encoder = MongoJsonEncoder
     app.register_blueprint(relay_api)
+    app.register_blueprint(auth_api)
+
 
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
         return render_template('index.html')
+    
+    jwt = JWTManager(app)
 
     return app

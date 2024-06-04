@@ -194,7 +194,7 @@ class Sr201(object):
 
     def __init__(self, hostname):
         self._hostname = hostname
-        self.open()
+        #self.open()
 
     def flush(self):
         s = select.select([self._soc.fileno()], [], [], 0.001)

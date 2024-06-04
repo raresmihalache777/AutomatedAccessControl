@@ -1,21 +1,19 @@
 import Booking from '@/models/bookingModel';
 import User from '@/models/userModel';
+import Banned from '@/models/bannedModel';
 
 import { NextRequest, NextResponse } from "next/server";
 
-//DELETE - Delete a user
+//DELETE - Delete and ban a user
 export async function DELETE(request: NextRequest){
     try{
-        console.log('Am primit request de delete pentru user-ul:')
+        console.log('Am primit request de delete + ban pentru user-ul:')
         const params = request.nextUrl.searchParams;
         const email = params.get('email');
-        console.log(email)
-        console.log('Am primit request de delete pentru user-ul:', email)
         
         // Find the user in the database
         const user = await User.findOne({ email });
 
-        console.log(user)
         
         // If the user doesn't exist, return an error
         if (!user) {
@@ -25,6 +23,15 @@ export async function DELETE(request: NextRequest){
             );
         }
         
+        //create new user
+        const bannedUser = new Banned({
+           email: user.email,
+        })
+
+        console.log(bannedUser)
+        //save to DB
+        const savedBanned = await bannedUser.save();
+
         // Delete the user from the database
         await User.deleteOne({email})
         await Booking.deleteMany({userId: user._id});

@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { FaAngleLeft } from 'react-icons/fa6';
+import Image from 'next/image';
 
 export default function SignUpPage() {
     const specialCharacterRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
@@ -19,11 +20,13 @@ export default function SignUpPage() {
 		password: '',
 	});
 
-	const [buttonDisabled, setButtonDisabled] = React.useState(false);
+	const [buttonDisabled, setButtonDisabled] = useState(false);
 
-	const [loading, setLoading] = React.useState(false);
+	const [loading, setLoading] = useState(false);
 
-    const [warning, setWarning] = React.useState('');
+    const [warning, setWarning] = useState('');
+
+	const [error, setError] = useState('')
 
 	const onSignUp = async () => {
 		try {
@@ -32,6 +35,7 @@ export default function SignUpPage() {
 			console.log('signup okay', response.data);
 			router.push('/login');
 		} catch (error: any) {
+			setError(error.response.data['error'])
 			console.log('Failed to sign up the user', error.message);
 		} finally {
 			setLoading(false);
@@ -63,6 +67,13 @@ export default function SignUpPage() {
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen py-2">
+			<Image
+              src="/logo_play.svg"
+              width={75}
+              height={75}
+              alt="Logo"
+            />
+
 			<h1 className="py-10 mb-10 text-5xl">
 				{loading ? 'Processing...' : 'Free Sign Up'}
 			</h1>
@@ -93,20 +104,21 @@ export default function SignUpPage() {
 				onChange={(e) => setUser({ ...user, password: e.target.value })}
 				placeholder="Your Password..."
 			/>
-            <p className="text-green-600">{warning}</p>
-            <p className="text-green-600">{buttonDisabled ? 'Please complete all fields':''}</p>
+            <p className="text-red-600">{warning}</p>
+            <p className="text-red-600">{buttonDisabled ? 'Please complete all fields':''}</p>
+			{error === '' ? <></> : <p className="text-red-600">{error}</p>}
 
 			<button
                 disabled={buttonDisabled}
 				onClick={onSignUp}
-				className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600 uppercase px-40 py-3 mt-10 font-bold">
+				className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600 uppercase px-40 py-3 mt-10 font-bold hover:bg-blue-600 hover:text-white">
 				Register
 			</button>
 
 			<Link href="/login">
 				<p className="mt-10">
 					Do you have a free account already?{' '}
-					<span className="font-bold text-green-600 ml-2 cursor-pointer underline">
+					<span className="font-bold text-blue-600 ml-2 cursor-pointer underline">
 						Login to your account
 					</span>
 				</p>

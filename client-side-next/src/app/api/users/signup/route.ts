@@ -3,6 +3,7 @@ import User from '@/models/userModel';
 import { NextRequest, NextResponse } from "next/server";
 
 import bcryptjs from 'bcryptjs';
+import Banned from '@/models/bannedModel';
 
 //POST - Create a new user
 export async function POST(request: NextRequest){
@@ -10,8 +11,13 @@ export async function POST(request: NextRequest){
         //body handling
         const reqBody = await request.json();
         const {username, email, password} = reqBody;
-        //console.log(reqBody);
-        //check for user duplicates
+        
+        //USER IS BANNED
+        const banned = await Banned.findOne({email});
+        if(banned){
+            return NextResponse.json({error: 'This email account has been banned!'}, {status:400});
+        }
+
         const user = await User.findOne({email})
         if(user){
             return NextResponse.json(

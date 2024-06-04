@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect } from 'react';
+import React, {useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { FaAngleLeft } from 'react-icons/fa6';
 import { useAppContext } from '../context/appContext';
+import Image from 'next/image'
+
 
 export default function LoginPage() {
 	const router = useRouter();
@@ -16,12 +18,14 @@ export default function LoginPage() {
 		password: '',
 	});
 
-	const [buttonDisabled, setButtonDisabled] = React.useState(false);
+	const [buttonDisabled, setButtonDisabled] = useState(false);
 
-	const [loading, setLoading] = React.useState(false);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState('');
 
 	const onLogin = async () => {
 		try {
+			console.log('login clicked')
 			appContext.toggleLoadingState(true)
 			const response = await axios.post('api/users/login', user);
 			console.log('Login successful', response.data);	
@@ -36,6 +40,7 @@ export default function LoginPage() {
 			}
 			appContext.toggleLoadingState(false)
 		} catch (error: any) {
+			setError(error.response.data['error'])
 			console.log('Login failed:', error.message);
 		} finally {
 			appContext.toggleLoadingState(false);
@@ -56,7 +61,15 @@ export default function LoginPage() {
 
 
 	return (
-		<div className="flex flex-col items-center justify-center min-h-screen py-2">
+		<div className="flex flex-col items-center justify-center min-h-screen">
+
+			<Image
+              src="/logo_play.svg"
+              width={75}
+              height={75}
+              alt="Logo"
+            />
+
 			<h1 className="py-10 mb-10 text-5xl">
 				{loading ? "We're logging you in..." : 'Account Login'}
 			</h1>
@@ -78,24 +91,24 @@ export default function LoginPage() {
 				onChange={(e) => setUser({ ...user, password: e.target.value })}
 				placeholder="Your Password..."
 			/>
-
+			{error === '' ? <></> : <p className="text-red-600">{error}</p>}
 			<button
 				onClick={onLogin}
-				className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600 uppercase px-40 py-3 mt-10 font-bold">
+				className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-600 uppercase px-40 py-3 mt-10 font-bold hover:bg-blue-600 hover:text-white">
 				Login
 			</button>
 
 			<Link href="/sign-up">
 				<p className="mt-10">
 					Do not have an account yet?
-					<span className="font-bold text-green-600 ml-2 cursor-pointer underline">
+					<span className="font-bold text-blue-600 ml-2 cursor-pointer hover:underline hover:text-blue-700">
 						Register your free account now
 					</span>
 				</p>
 			</Link>
 
 			<Link href="/">
-				<p className="mt-8 opacity-50">
+				<p className="mt-8 opacity-50 hover:underline hover:opacity-100">
 					<FaAngleLeft className="inline mr-1" /> Back to the Homepage
 				</p>
 			</Link>

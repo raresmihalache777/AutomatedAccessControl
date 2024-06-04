@@ -3,8 +3,8 @@ import User from '@/models/userModel';
 import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken'
+import Banned from "@/models/bannedModel";
 
-connectToMongoDB();
 
 export async function POST(request: NextRequest){
     try{
@@ -17,11 +17,18 @@ export async function POST(request: NextRequest){
 
         //console.log(user);
 
+        //USER IS BANNED
+        const banned = await Banned.findOne({email});
+        if(banned){
+            return NextResponse.json({error: 'This email account has been banned!'}, {status:400});
+        }
+
         //USER DOESN'T EXIST
         if(!user){
             return NextResponse.json({error: 'User was not found'}, {status:400});
         }
         
+
         //validationg pass
         const validPass = await bcryptjs.compare(password, user.password);
     
