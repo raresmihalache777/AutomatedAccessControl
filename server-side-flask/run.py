@@ -1,8 +1,4 @@
-import logging
 from rp4app.factory import create_app
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
-
-
 import os
 import configparser
 

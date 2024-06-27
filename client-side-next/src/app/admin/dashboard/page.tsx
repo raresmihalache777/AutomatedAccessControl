@@ -1,19 +1,20 @@
 'use client'
 
 import { useUserContext } from "@/app/context/userContext";
+import { useAppContext } from "@/app/context/appContext";
+
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Interface } from "readline";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useRouter } from "next/navigation";
-import { MdEmail } from "react-icons/md";
+
 
 
 
 
 export default function AdminDashboardPage(){
 
+	//Interfaces
 	interface BookingInterface{
 		code:number,
 		date:Date,
@@ -22,7 +23,10 @@ export default function AdminDashboardPage(){
 		timeStamp:Date,
 		userId:String,
 		_id:String,
-		username:String
+		username:String,
+		paymentId: String,
+        paymentMethod: String,
+        paymentStatus: String
 	}
 
 	interface UserInterface{
@@ -38,6 +42,8 @@ export default function AdminDashboardPage(){
 	}
 
 	const userState = useUserContext();
+	const appContext = useAppContext();
+
 	const [bookings, setBookings] = useState([]);
 	const [displayBookings, setDisplayBookings] = useState([]);
 	const [lightsStatus, setLightsStatus] = useState('Off');
@@ -46,7 +52,10 @@ export default function AdminDashboardPage(){
 	const [filterUserName, setFilterUserName] = useState('');
 	const [bannedAcc, setBannedAcc] = useState([]);
 
+
 	const getBookingsByDate = async (date:Date) => {
+		appContext.toggleLoadingState(true)
+		var startTime = performance.now()
         try{
             const query = `dateQuery=${date.toISOString()}`
             var response = await axios.get(`/api/bookings/get-booking-list?${query}`)
@@ -60,7 +69,11 @@ export default function AdminDashboardPage(){
 			setBookings(response.data.message)
         }catch(err:any){
             console.log('Error while fetching bookings: ' + err.message);
-        }
+        }finally{
+			var endTime = performance.now()
+        	console.log(`Functia de cautare rezervari a rulat in ${(endTime - startTime)/1000} secunde`)
+			appContext.toggleLoadingState(false)
+		}
         
     }
 
@@ -108,8 +121,10 @@ export default function AdminDashboardPage(){
 		try{
 			const response = await axios.post(`/api/server/relay-control`, {relay_command:'close', relay_number:1, relay_delay:2})
 			console.log(response)
+			appContext.alert.setAlertState(`Door is opened...Have fun!`, true)
 		}catch(error:any){
 			console.log('Error while unlocking: '+ error.message);
+			appContext.alert.setAlertState(`Door control failed...Try again later!`, true)
 		}
 	}
 
@@ -121,6 +136,7 @@ export default function AdminDashboardPage(){
 			getLightsStatus()
 		}catch(error:any){
 			console.log('Error while unlocking: '+ error.message);
+			appContext.alert.setAlertState(`Lights control failed...Try again later!`, true)
 		}
 	}
 
@@ -132,6 +148,7 @@ export default function AdminDashboardPage(){
 			getLightsStatus()
 		}catch(error:any){
 			console.log('Error while unlocking: '+ error.message);
+			appContext.alert.setAlertState(`Lights control failed...Try again later!`, true)
 		}
 	}
 	
@@ -148,6 +165,8 @@ export default function AdminDashboardPage(){
 			
 		}catch(error:any){
 			console.log('Error while unlocking: '+ error.message);
+			appContext.alert.setAlertState(`Status refresh failed...Try again later!`, true)
+
 		}
 	}
 
@@ -178,13 +197,11 @@ export default function AdminDashboardPage(){
 		try{
 			const query = `email=${email}`
 			const response = await axios.put(`/api/users/make-admin?${query}`)
-			
-			console.log(response)
-			
 			handleUsersLoad()
+			appContext.alert.setAlertState(`${email} is now admin!`, true)
 
 		}catch(error:any){
-			console.log('Error while unlocking: '+ error.message);
+			console.log('Error while changing admin status: '+ error.message);
 		}
 	}
 
@@ -206,12 +223,22 @@ export default function AdminDashboardPage(){
 			console.log('Error while unlocking: '+ error.message);
 		}
 	}
+
+	const markAsPaid = async (booking: BookingInterface) => {
+		const updateResponse = await axios.post('https://localhost:3000/api/bookings/change-payment-info', {
+            paymentStatus: 'paid',
+            paymentId: booking.paymentId,
+            bookingId: booking._id
+        })
+		getBookingsByDate(queryDate)
+	}
+
 	useEffect(() => {
 		getBookingsByDate(queryDate)
 	}, [userState, queryDate])
 
 	useEffect(() => {
-		getLightsStatus()
+		//getLightsStatus()
 		handleUsersLoad()
 		getBannedAcc()
 	},[])
@@ -224,7 +251,7 @@ export default function AdminDashboardPage(){
 
     return (
 		<div className="mx-5">
-			<h1 className="text-black-600 text-5xl text-center py-10">
+			<h1 className="mt-10 text-black-600 text-5xl text-center py-10">
 				Hello, <span className='text-black-600 text-5xl'>{userState.username}!</span>
 			</h1>
 			<div className="grid grid-cols-2 gap-4">
@@ -324,15 +351,24 @@ export default function AdminDashboardPage(){
 							{displayBookings.map((booking:BookingInterface, index) => (
 								<div key={index} className="p-4 bg-slate-100 rounded-lg">
 									<p className="font-bold">Booking {index + 1}</p>
-									<p>Player: {booking.username}</p>
-									<p>Date: {booking.date.toString().slice(0,10)}</p>
-									<p>Start Time: {String(Math.trunc(booking.startTime/60)).padStart(2, '0')}:{String(booking.startTime%60).padStart(2, '0')}</p>
-									<p>Duration: {booking.duration} minutes</p>
+									<p><b>Player:</b> {booking.username}</p>
+									<p><b>Date:</b> {booking.date.toString().slice(0,10)}</p>
+									<p><b>Start Time:</b> {String(Math.trunc(booking.startTime/60)).padStart(2, '0')}:{String(booking.startTime%60).padStart(2, '0')}</p>
+									<p><b>Duration:</b> {booking.duration} minutes</p>
+									<p><b>Payment method:</b> {booking.paymentMethod}</p>
+									<p><b>Payment status:</b> {booking.paymentStatus}</p>
 									<button
 										className={"text-white bg-red-600 rounded-full px-10 py-1 hover:bg-red-700"}
 										onClick={() => {deleteBooking(booking._id, booking.userId)}}
 									>
 										Delete
+									</button>
+									<button
+										className={`mx-5 text-white bg-blue-600 rounded-full px-10 py-1 hover:bg-blue-700 ${booking.paymentStatus === 'unpaid' ? '' : 'opacity-0'}`}
+										onClick={() => {markAsPaid(booking)}}
+										disabled={booking.paymentStatus === 'unpaid' ? false : true}
+									>
+										Mark as paid
 									</button>
 								</div>
 							))}
@@ -389,7 +425,7 @@ export default function AdminDashboardPage(){
 				<div className='flex flex-col bg-white p-5 rounded-2xl my-5'>
 					<div className='flex flex-col items-start'>
 						<h2 className="text-black-700 text-3xl py-2">
-							Banner accounts
+							Banned accounts
 						</h2>
 						{bannedAcc.length !== 0 ? 
 							<div className="grid grid-cols-2 gap-4">

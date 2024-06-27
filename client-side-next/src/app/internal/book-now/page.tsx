@@ -12,6 +12,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import getAvailableSlots from '@/app/utils/timeslotsUtils'
 import { loadStripe } from '@stripe/stripe-js';
 
+const stripe = require('stripe')('sk_test_51PNzm2F2WL7X36vFrDjDBRO8G9ijqWGGmGYTXWf4FxyPN9FlT52ttK5sRsF67MIFxCALcCIdstYuAmkhWM3Nb4cd00iIMqPBoS');
+
 
 const stripePromise = loadStripe(
     String(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -19,15 +21,21 @@ const stripePromise = loadStripe(
 
 export default function BookPage() {
     const [booking, setBooking] = useState({
+        _id : '',
         userId : '',
         date : new Date(),
         startTime : 0,
-        duration:0,
+        duration:60,
         timestamp : new Date(),
-        code: ''
+        code: '',
+        paymentId: '',
+        paymentMethod: '',
+        paymentStatus: ''
     })
 
-    const [loading, setLoading] = useState(false);
+    const userContext = useUserContext();
+    const appContext = useAppContext();
+
     const [startDate, setStartDate] = useState(new Date());
 	const [bookingDuration, setBookingDuration] = useState(60);
 	const [bookDisabled, setBookDisabled] = useState(true);
@@ -35,8 +43,6 @@ export default function BookPage() {
     const [availableSlots, setAvailableSlots] = useState({'s':[1,2,3]})
     const [disabledDurations, setDisabledDurations] = useState({button60:true, button90:true, button120:true});
     const [cardPayment, setCardPayment] = useState(false)
-	const userState = useUserContext();
-    const appState = useAppContext();
     const dayStart = 0;
     const dayEnd = 1440;
     
@@ -49,6 +55,7 @@ export default function BookPage() {
         }
     }
 
+    //Computes start of day, computes minutes elapsed and modifies booking state
     const handleDateChange = (date: any) => {
 
         //duration = minutes elapsed from 00:00
@@ -65,12 +72,13 @@ export default function BookPage() {
         setStartDate(date)
 		setBookDisabled(false);
         setBooking({...booking,
-            userId : userState.id,
+            userId : userContext.id,
             date : dayStart,
             startTime : minutesElapsed
         })
     }
 
+    //Sets the booking duration
 	const handleDurationChange = (duration: number) => {
         setBookingDuration(duration);
         setBooking({...booking,
@@ -78,9 +86,9 @@ export default function BookPage() {
         })
     };
 
+    //gets all the bookings of a given day and creates an array with [startTime, duration]
     const getBookingsByDate = async (date:Date) => {
         try{
-            setLoading(true);
             const query = `dateQuery=${date.toISOString()}`
             const response = await axios.get(`/api/bookings/get-booking-list?${query}`)
             
@@ -100,22 +108,38 @@ export default function BookPage() {
         
     }
     
+    //handles the booking save to DB or Stripe activation
 	const onBook = async () => {
+        var startTime = performance.now()
 		try{
-            setLoading(true);
+            appContext.toggleLoadingState(true)
             
             if(cardPayment === false){
-                const response = await axios.post('/api/bookings/create', booking);
-                appState.alert.setAlertState('Rezervarea a fost facuta cu succes:'+ response.data, true)
+                let response = await axios.post('/api/bookings/create', {...booking, paymentMethod: (cardPayment ? 'card' : 'cash'), paymentStatus: 'unpaid', paymentId: 'none'});
+                const updateResponse = await axios.post('https://localhost:3000/api/bookings/change-payment-info', {
+                    paymentStatus: 'none',
+                    paymentId: 'none',
+                    bookingId: response.data._id
+                }) 
+                appContext.alert.setAlertState('Booking confirmed! Go to profile to see all your bookings. ', true)
             }else{
-                const response = await axios.post('/api/stripe', booking);
+                let response = await axios.post('/api/bookings/create', {...booking, paymentMethod: (cardPayment ? 'card' : 'cash'), paymentStatus: 'unpaid', paymentId: 'none'});
+                const savedBooking = await response.data.savedBooking
+                response = await axios.post('/api/stripe', savedBooking);
+                window.location.href = response.data.url;
+                appContext.alert.setAlertState('Booking confirmed! Go to profile to see all your bookings. ', true)
             }
         }catch(error:any){
-            appState.alert.setAlertState('Error while saving your booking', true)
+            appContext.alert.setAlertState('Error while saving your booking', true)
             console.log('Error while saving your booking: ' + error.message);
+        }finally{
+            var endTime = performance.now()
+            console.log(`Functia de rezervere a rulat in ${(endTime - startTime)/1000} secunde`)
+            appContext.toggleLoadingState(false)
         }
 	}
 
+    //filters the options in the time selector so you can only choose a time after current time
     const filterTime = (time:any) => {
         const currentDate = new Date();
         const selectedDate = new Date(time);
@@ -139,26 +163,46 @@ export default function BookPage() {
         }
       };
 
+    const handleStripeRedirect = async () => {
+        // Check to see if this is a redirect back from Checkout
+        const query = new URLSearchParams(window.location.search);
+        if (query.get('session_id')){
+            const session = await stripe.checkout.sessions.retrieve(query.get('session_id'));
+            console.log(session)
+            if (query.get('success')) {
+                const response = await axios.post('https://localhost:3000/api/bookings/change-payment-info', {
+                    paymentStatus: session.status,
+                    paymentId: session.id,
+                    bookingId: query.get('booking_id')
+                })
+            }
+            if (query.get('canceled')) {
+                const response = await axios.post('https://localhost:3000/api/bookings/change-payment-info', {
+                    paymentStatus: session.id,
+                    paymentId: session.payment_intent,
+                    bookingId: query.get('booking_id')
+                })                
+            }
+        }
+        
+    }
+
     useEffect(() => {
-        //console.log(booking)
         getBookingsByDate(booking.date)
         setDisabledDurations({button60:true, button90:true, button120:true})
     }, [booking])
 
     useEffect(() => {
-        //console.log(existingBookings)
         setAvailableSlots(getAvailableSlots(existingBookings, dayStart, dayEnd))
     }, [existingBookings])
 
     useEffect(() => {
-        console.log(booking)
         // Format the hour and minute components with leading zeros if necessary
         const hours = String(Math.trunc(booking.startTime/60)).padStart(2, '0');
         const minutes = String(booking.startTime%60).padStart(2, '0');
 
         // Creating string time format to access the Object
         let stringTime:String = `${hours}:${minutes}`;
-        console.log(availableSlots[stringTime])
         for( let i = 0; i <= availableSlots[stringTime]?.length; i++ ){
             let duration = availableSlots[stringTime][i];
             if(duration === 120){
@@ -173,15 +217,7 @@ export default function BookPage() {
     }, [availableSlots])
 
     useEffect(() => {
-        // Check to see if this is a redirect back from Checkout
-        const query = new URLSearchParams(window.location.search);
-        if (query.get('success')) {
-          console.log('Order placed! You will receive an email confirmation.');
-        }
-    
-        if (query.get('canceled')) {
-          console.log('Order canceled -- continue to shop around and checkout when you’re ready.');
-        }
+        handleStripeRedirect();
       }, []);
     return (
         <div className="flex flex-col w-screen h-screen justify-center items-center bg-[url('/court_bg_2.jpg')] bg-cover">

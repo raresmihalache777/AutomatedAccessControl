@@ -15,16 +15,15 @@ export async function middleware(request: NextRequest) {
         '/api/users/unban'
     ]
 
-    const internalRoute = urlPath.includes('internal');
     const adminRoute = urlPath.includes('admin');
 
     //API ROUTES--------------------------------
 
     //PUBLIC API ROUTES - anyone can issue requests to this routes
-    const publicApiRoute = (urlPath === '/api/users/login' || urlPath === '/api/users/sign-up')
+    const publicApiRoute = (urlPath === '/api/users/login' || urlPath === '/api/users/signup' || urlPath === '/api/stripe-webhook')
 
     //USERS API ROUTES - only users with valid token can issue requests
-    const usersApiRoute = urlPath.includes('api') && (urlPath !== '/api/users/login' && urlPath !== '/api/users/signup') && !adminOnlyApiRoutes.includes(urlPath)
+    const usersApiRoute = urlPath.includes('api') && !publicApiRoute && !adminOnlyApiRoutes.includes(urlPath)
 
     //ADMIN API ROUTES - only admins can issue requests to this routes
     const adminApiRoute = urlPath.includes('api') && adminOnlyApiRoutes.includes(urlPath)
@@ -45,16 +44,18 @@ export async function middleware(request: NextRequest) {
 
     //API RULES--------------------------------
     //API ADMIN ROUTES
-    if(adminApiRoute && !currentToken){        
+    if(adminApiRoute && !currentToken){    
         return Response.json(
             { success: false, message: 'authentication failed' },
             { status: 401 }
         )
     }else if(adminApiRoute && currentToken){
-        //return NextResponse.next()
         try{
-            const decoded = await jose.jwtVerify(currentToken as string, new TextEncoder().encode(process.env.TOKEN_SECRET as string));
-            const {id, username, type} = decoded.payload;
+            const decoded = await jose.jwtVerify(
+                currentToken as string, 
+                new TextEncoder().encode(process.env.TOKEN_SECRET as string));
+
+            const {type} = decoded.payload;
 
             if(type !== 'a'){
                 return Response.json(
@@ -64,14 +65,15 @@ export async function middleware(request: NextRequest) {
             }
         }catch(e){
             return Response.json(
-                { success: false, message: 'Your token is invalid, please reauthenticate!'},
-                { status: 401 }
+                { success: false, message: 'Server error!'},
+                { status: 500 }
             )
         }
     }
 
     //API USERS ROUTES
-    if(usersApiRoute && !currentToken){       
+    if(usersApiRoute && !currentToken){  
+
         return Response.json(
             { success: false, message: 'authentication failed' },
             { status: 401 }

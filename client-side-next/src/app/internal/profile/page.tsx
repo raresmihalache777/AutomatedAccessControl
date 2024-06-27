@@ -17,11 +17,15 @@ export default function ProfilePage(){
 		startTime:number,
 		timeStamp:Date,
 		userId:String,
-		_id: String
+		_id:String,
+		paymentId:String,
+        paymentMethod: String,
+        paymentStatus: String
 	}
 
 	const userState = useUserContext();
 	const appContext = useAppContext();
+	
 	const [bookings, setBookings] = useState([{
 		code:1,
 		date:new Date,
@@ -29,11 +33,15 @@ export default function ProfilePage(){
 		startTime:1,
 		timeStamp:new Date,
 		userId:'String',
-		_id: 'String'
+		_id: 'String',
+		paymentId: '',
+        paymentMethod: '',
+        paymentStatus: ''
 	}]);
 
 	const getBookingsById = async (id:String) => {
 		try{
+			appContext.toggleLoadingState(true);
 			const query = `userIdQuery=${id}`
 			const response = await axios.get(`/api/bookings/get-booking-list?${query}`)
 			var sortedBookings = response.data.message.sort(
@@ -54,6 +62,8 @@ export default function ProfilePage(){
 	
 		}catch(err:any){
 			console.log('Error while fetching bookings: ' + err.message);
+		}finally{
+			appContext.toggleLoadingState(false);
 		}
 		
 	}
@@ -147,9 +157,11 @@ export default function ProfilePage(){
 						{bookings.map((booking:BookingInterface, index) => (
 							<div key={index} className="p-4 bg-slate-100 rounded-lg">
 								<p className="font-bold">Booking {index + 1}</p>
-								<p>Date: {booking.date.toString().slice(0,10)}</p>
-								<p>Start Time: {String(Math.trunc(booking.startTime/60)).padStart(2, '0')}:{String(booking.startTime%60).padStart(2, '0')}</p>
-								<p>Duration: {booking.duration} minutes</p>
+								<p><b>Date:</b> {booking.date.toString().slice(0,10)}</p>
+								<p><b>Start Time:</b> {String(Math.trunc(booking.startTime/60)).padStart(2, '0')}:{String(booking.startTime%60).padStart(2, '0')}</p>
+								<p><b>Duration:</b> {booking.duration} minutes</p>
+								<p><b>Payment method:</b> {booking.paymentMethod}</p>
+								<p><b>Payment status:</b> {booking.paymentStatus}</p>
 								<button
 									className={`text-white bg-blue-600 rounded-full px-10 py-1 hover:bg-blue-700 ${unlockEnabler(booking) ? 'opacity-50 cursor-not-allowed' : ''}`}
 									onClick={() => {unlockHandler(booking.code)}}

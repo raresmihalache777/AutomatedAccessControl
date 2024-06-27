@@ -91,6 +91,7 @@ export default function LoginPage() {
 				onChange={(e) => setUser({ ...user, password: e.target.value })}
 				placeholder="Your Password..."
 			/>
+
 			{error === '' ? <></> : <p className="text-red-600">{error}</p>}
 			<button
 				onClick={onLogin}
@@ -102,7 +103,7 @@ export default function LoginPage() {
 				<p className="mt-10">
 					Do not have an account yet?
 					<span className="font-bold text-blue-600 ml-2 cursor-pointer hover:underline hover:text-blue-700">
-						Register your free account now
+						Register your account now
 					</span>
 				</p>
 			</Link>

@@ -258,6 +258,7 @@ class Sr201(object):
             data += match.group(2)
         self.open()
         self.send(data)
+        self.close()
         return (f'Executed {command}')
 
     def do_cloud_enabled(self, command):
@@ -437,3 +438,18 @@ def main(argv=sys.argv):
 
 if __name__ == '__main__':
     main()
+
+
+
+
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+{
+  "id": "1234567890",
+  "username": "admin",
+  "email": "test@gmail.com",
+  "type" : "a"
+}

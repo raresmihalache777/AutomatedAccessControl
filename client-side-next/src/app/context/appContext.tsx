@@ -7,9 +7,9 @@ const AppContext = createContext({loading:false, toggleLoadingState: (x:boolean)
 export function AppWrapper({children} : {
     children: React.ReactNode;
 }) {
-    const [loadingState, setLoadingState] = useState(Boolean);
+    const [loadingState, setLoadingState] = useState(false);
     const [alertMessage, setAlertMessage] = useState('')
-    const [showAlert, setShowAlert] = useState(Boolean)
+    const [showAlert, setShowAlert] = useState(false)
 
     const toggleLoadingState = (x:boolean) => {setLoadingState(x);}
     const toggleAlert = (m: string, x:boolean) =>{setAlertMessage(m), setShowAlert(x);}

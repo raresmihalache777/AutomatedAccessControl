@@ -6,8 +6,9 @@ export async function POST(request: NextRequest){
     try{
         //request date extraction
         const reqBody = await request.json();
-        const {userId, date, startTime, duration} = reqBody;
+        const {userId, date, startTime, duration, paymentId, paymentMethod, paymentStatus} = reqBody;
         const objId = new mongoose.mongo.ObjectId(userId);
+
         //create new booking
         const newBooking = new Booking({
             userId: objId,
@@ -15,11 +16,15 @@ export async function POST(request: NextRequest){
             startTime,
             duration,
             timestamp : new Date(),
-            code: Math.floor(100000 + Math.random() * 900000)
+            code: Math.floor(100000 + Math.random() * 900000),
+            paymentId, 
+            paymentMethod, 
+            paymentStatus
         })
         console.log(newBooking)
+
         //saveto DB
-        const savedBooking = newBooking.save();
+        const savedBooking = await newBooking.save();
 
         //response
         return NextResponse.json({
@@ -28,6 +33,6 @@ export async function POST(request: NextRequest){
             savedBooking    
         })
     }catch(error:any){
-        return NextResponse.json({message: error.message}, {status: 500})
+        return NextResponse.json({message: error}, {status: 500})
     }
 }

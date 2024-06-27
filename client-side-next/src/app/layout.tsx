@@ -13,14 +13,21 @@ const inter = Inter({ subsets: ["latin"] });
 
 https.globalAgent.options.rejectUnauthorized = false; 
 
-connectToMongoDB();
+
 
 const getServerToken = async () => {
-  var serverToken = await connectToServer();
+  let serverToken = await connectToServer();
+  console.log(serverToken);
   axios.defaults.headers.common = {'Authorization': `Bearer ${serverToken}`}
 }
 
-getServerToken()
+try{
+  connectToMongoDB();
+  getServerToken()
+}catch(error:any){
+  
+}
+
 
 export const metadata: Metadata = {
   title: "Court Booking App",

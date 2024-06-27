@@ -26,7 +26,8 @@ export async function POST(request: NextRequest){
             )
         }
         console.log('newUser')
-        //password hashing
+        
+        
         const salt = await bcryptjs.genSalt(10);
         const hashedPass = await bcryptjs.hash(password, salt);
 

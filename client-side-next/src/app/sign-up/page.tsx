@@ -63,7 +63,6 @@ export default function SignUpPage() {
         }
 	}, [user]);
 
-	//console.log(user);
 
 	return (
 		<div className="flex flex-col items-center justify-center min-h-screen py-2">
@@ -75,7 +74,7 @@ export default function SignUpPage() {
             />
 
 			<h1 className="py-10 mb-10 text-5xl">
-				{loading ? 'Processing...' : 'Free Sign Up'}
+				{loading ? 'Processing...' : 'Sign Up'}
 			</h1>
 
 			<input
@@ -104,6 +103,14 @@ export default function SignUpPage() {
 				onChange={(e) => setUser({ ...user, password: e.target.value })}
 				placeholder="Your Password..."
 			/>
+			<input	
+				className="w-[350px] text-slate-800 p-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:border-gray-600"
+				id="password"
+				type="password"
+				value={user.password}
+				onChange={(e) => setUser({ ...user, password: e.target.value })}
+				placeholder="Retype your password..."
+			/>
             <p className="text-red-600">{warning}</p>
             <p className="text-red-600">{buttonDisabled ? 'Please complete all fields':''}</p>
 			{error === '' ? <></> : <p className="text-red-600">{error}</p>}
@@ -117,7 +124,7 @@ export default function SignUpPage() {
 
 			<Link href="/login">
 				<p className="mt-10">
-					Do you have a free account already?{' '}
+					Do you have an account already?{' '}
 					<span className="font-bold text-blue-600 ml-2 cursor-pointer underline">
 						Login to your account
 					</span>

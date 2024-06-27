@@ -1,5 +1,4 @@
 import axios from "axios";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function connectToServer(){
     const clientUser = process.env.SERVER_USER

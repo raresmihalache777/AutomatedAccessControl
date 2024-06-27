@@ -1,13 +1,10 @@
 from flask import Blueprint, json, request, jsonify
-
 from flask_cors import CORS
-from rp4app.api.utils import expect
-from datetime import datetime
 from relay import Sr201
 import configparser
 import os
 import time
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required
 
 
 config = configparser.ConfigParser()
@@ -23,7 +20,7 @@ auth_api = Blueprint(
 CORS(relay_api)
 CORS(auth_api)
 
-#Configure relay object for relay controll
+#REALY OBJ
 for i in range(30):
     try:
         relay = Sr201(config['PROD']['REALY_IP'])
@@ -33,6 +30,7 @@ for i in range(30):
     except:
         print('Error while connectiong to relay!')
 
+#REALY CONTROL ENDPOINTS
 @relay_api.route('/', methods=['GET'])
 @jwt_required()
 def api_relay_status():
@@ -62,7 +60,6 @@ def api_relay_open():
 @jwt_required()
 def api_relay_close():
     try:
-        print(request)
         relay_number = request.args.get('relay_number')
         relay_delay = request.args.get('relay_delay')
         if relay_delay:
@@ -72,11 +69,14 @@ def api_relay_close():
         return response
     except Exception as e:
         print('Error:', e)
+        return jsonify({'message': 'Error while closing!', 'error': e}), 500
     finally:
         relay.close()
 
+
+#AUTH ENDPOINTS
 @auth_api.route('/get-token', methods=['GET'])
-def api_relay_status():
+def api_auth_get_token():
     try:
         body = json.loads(request.data)
         [client_username, client_password] = [body['clientUser'], body['clientPass']]
